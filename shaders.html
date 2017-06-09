@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>CG - WebGL</title>
+
+<!-- Google fonts -->
+<link href='http://fonts.googleapis.com/css?family=Roboto:400,300,700' rel='stylesheet' type='text/css'>
+
+<!-- font awesome -->
+<link href="//maxcdn.bootstrapcdn.com/font-awesome/4.2.0/css/font-awesome.min.css" rel="stylesheet">
+
+<!-- bootstrap -->
+<link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css" />
+
+<!-- animate.css -->
+<link rel="stylesheet" href="assets/animate/animate.css" />
+<link rel="stylesheet" href="assets/animate/set.css" />
+
+<!-- gallery -->
+<link rel="stylesheet" href="assets/gallery/blueimp-gallery.min.css">
+
+<!-- favicon -->
+<link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon">
+<link rel="icon" href="images/favicon.ico" type="image/x-icon">
+
+
+<link rel="stylesheet" href="assets/style.css">
+
+</head>
+
+<body>
+<div class="topbar animated fadeInLeftBig"></div>
+
+<!-- Header Starts -->
+<div class="navbar-wrapper">
+      <div class="container">
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation" id="top-nav">
+          <div class="container">
+            <div class="navbar-header" style="margin-top: 14px;">
+              <!-- Logo Starts -->
+              <a class="navbar-brand" href="#home">
+			  <font color = "#0c5178" size="20">Computer Graphic</font>
+			  </a>
+              <!-- #Logo Ends -->
+
+
+              <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+              </button>
+
+            </div>
+
+
+            <!-- Nav Starts -->
+            <div class="navbar-collapse  collapse">
+              <ul class="nav navbar-nav navbar-right scroll">
+                 <li class="active"><a href="#">By Amin Endah</a></li>                 
+              </ul>
+            </div>
+            <!-- #Nav Ends -->
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+<!-- #Header Starts -->
+
+
+<div style="height: 100px;">
+
+</div>
+<div>
+<p align="right">
+<a href="home.html"><img alt="Home" src="/img/system/home.png" width="30" height="30" /></a></p>
+</div>
+
+
+<!-- works -->
+<div id="works"  class=" clearfix grid" style="padding-left: 3cm;"> 
+    <p align="left">
+	<b>***Vertex***</b>
+	</br>
+	attribute vec3 inPosition;          // Position vector received</br>
+attribute vec3 inNormal;            // Normal vector received</br>
+attribute vec2 inDiffUV;            // UV Position vector for diffuse texture received</br>
+ 
+varying vec3 fsPosition;        // Position vector for FS</br>
+varying vec3 fsNormal;          // Normal vector for FS</br>
+varying vec2 fsLMapUV;          // UV Position vector for light map texture for FS</br>
+varying vec2 fsDiffUV;</br>
+ </br>
+uniform mat4 wvpMatrix;     // World,View,Project Matrix for the vertices</br>
+uniform mat4 wMatrix;       // World matrix to transform vertices in world space</br>
+uniform mat3 nwMatrix;      // Matrix to transform normal vectors in world space</br>
+ </br>
+ </br>
+void main(void)</br>
+{</br>
+    //fsPosition = (wMatrix * vec4(inPosition, 1.0)).xyz;</br>
+    //fsNormal = nwMatrix * inNormal;</br>
+	fsNormal = inNormal; </br>
+	fsPosition = inPosition;</br>
+    fsDiffUV = inDiffUV;        </br>
+ 
+    //gl_Position = wvpMatrix * vec4(inPosition, 1.0);</br>
+	gl_Position = wvpMatrix * vec4(inPosition, 1.0);</br>
+}</br>
+	</br>
+	<b>***Fragment***</b>
+	</br>
+	precision highp float;</br>
+ </br>
+varying vec3 fsPosition;            // Position vector received from VS</br>
+varying vec3 fsNormal;              // Normal vector received from VS</br>
+varying vec2 fsLMapUV;              // UV Position vector for diffuse texture received from VS</br>
+varying vec2 fsDiffUV;</br>
+ </br>
+uniform vec3 eyePosition;           // Position of the camera in the space coordinates system chosen</br>
+ </br>
+        // Material</br>
+uniform vec4 mDiffColor;            // Material's diffuse color</br>
+uniform vec4 mSpecColor;            // Material's specular color;</br>
+uniform float mSpecPower;           // Material's specular color power factor</br>
+ </br>
+        // Lights</br>
+uniform vec4 lightColor;            // Color of the lights</br>
+uniform vec3 lightPosition;         // Lights source position vector</br>
+uniform vec3 spotLightDirection;    // Constant incident spot light ray direction  </br>
+uniform float spotLightCosin;       // Spot light cos-in parameter</br>
+uniform float spotLightCosout;      // Spot light cos-out parameter</br>
+ </br>
+        // Textures</br>
+uniform sampler2D lMapTexture;     	   // Light Map texture</br>
+uniform float hasLightMap;             // Light Map texture intensity: 0---->non present , 1---->effective</br>
+ </br>
+void main(void)</br>
+{</br>
+    vec3 nNormal = normalize(fsNormal);                 // Normalized normal</br>
+    vec3 nEyeDirection = normalize(eyePosition - fsPosition);</br>
+    vec4 lightMapInfluence = texture2D(lMapTexture, fsDiffUV) * hasLightMap + mDiffColor * (1.0 - hasLightMap);</br>
+</br>
+			 </br>
+    // Light model</br>
+	vec4 diffuse, specular;           </br>
+    vec3 nLightDirection;</br>
+	
+	float spotLightCosin = 0.7;</br>
+	float spotLightCosout = 0.5;</br>
+	
+	nLightDirection = normalize(lightPosition - fsPosition);   // Direction of the light source wrt the current position, normalized</br>
+	float lightDecay;</br>
+	float lightCone = - dot(nLightDirection, normalize(spotLightDirection));</br>
+	if(lightCone < spotLightCosout){</br>
+		lightDecay = 0.0;}</br>
+	else if (lightCone > spotLightCosin){</br>
+		lightDecay = 1.0;}</br>
+	else{</br>
+		lightDecay = (lightCone - spotLightCosout) / (spotLightCosin - spotLightCosout);}</br>
+	</br>
+	// Diffuse component</br>
+	diffuse += lightMapInfluence * lightColor * lightDecay * (max(dot(nNormal, - normalize(spotLightDirection)), 0.0));</br>
+	</br>
+	// Specular component         </br>
+	vec3 refl = - reflect(-normalize(spotLightDirection), nNormal); // Reflection vector</br>
+	specular += mSpecColor * lightColor * lightDecay * pow(max(dot(refl, nEyeDirection), 0.0), mSpecPower);</br>
+	</br>
+ </br>
+    gl_FragColor = min(diffuse + specular, vec4(1,1,1,1));</br>
+}</br>
+	</p>
+     
+</div>
+<!-- works -->
+
+
+
+
+
+
+
+<!-- Cirlce Starts -->
+<div id="about"  class="container spacer about">
+
+</div>
+<!-- #Cirlce Ends -->
+
+
+
+
+
+<!-- Footer Starts -->
+<div class="footer text-center spacer">
+<p class="wowload flipInX">Amin Endah Sulistiawati</p>
+Politecnico di Milano, Como Campus
+</div>
+<!-- # Footer Ends -->
+<a href="#works" class="gototop "><i class="fa fa-angle-up  fa-3x"></i></a>
+
+
+
+
+
+<!-- The Bootstrap Image Gallery lightbox, should be a child element of the document body -->
+<div id="blueimp-gallery" class="blueimp-gallery blueimp-gallery-controls">
+    <!-- The container for the modal slides -->
+    <div class="slides"></div>
+    <!-- Controls for the borderless lightbox -->
+    <h3 class="title">Title</h3>
+    <a class="prev">‹</a>
+    <a class="next">›</a>
+    <a class="close">×</a>
+    <!-- The modal dialog, which will be used to wrap the lightbox content -->    
+</div>
+
+
+
+<!-- jquery -->
+<script src="assets/jquery.js"></script>
+
+<!-- wow script -->
+<script src="assets/wow/wow.min.js"></script>
+
+
+<!-- boostrap -->
+<script src="assets/bootstrap/js/bootstrap.js" type="text/javascript" ></script>
+
+<!-- jquery mobile -->
+<script src="assets/mobile/touchSwipe.min.js"></script>
+<script src="assets/respond/respond.js"></script>
+
+<!-- gallery -->
+<script src="assets/gallery/jquery.blueimp-gallery.min.js"></script>
+
+<!-- custom script -->
+<script src="assets/script.js"></script>
+
+</body>
+</html>
